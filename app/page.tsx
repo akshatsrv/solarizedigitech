@@ -1,3 +1,4 @@
+// Homepage - Solarize DigiTech
 import Link from 'next/link'
 import Image from 'next/image'
 import { Brain, Cloud, Building2, Cpu, TrendingUp, Users, Award, Target, ArrowRight } from 'lucide-react'
