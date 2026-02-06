@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone', // For Hostinger deployment
   images: {
     remotePatterns: [
       {
@@ -10,6 +11,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    unoptimized: true, // Required for some shared hosting
   },
 }
 

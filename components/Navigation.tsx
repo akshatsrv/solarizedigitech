@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Menu, X, ChevronDown } from 'lucide-react'
 
 const navItems = [
@@ -53,13 +52,10 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
           <Link href="/" className="flex items-center hover:opacity-90 transition-opacity">
-            <Image
+            <img
               src="/logo.png"
               alt="Solarize DigiTech"
-              width={240}
-              height={80}
               className="h-12 lg:h-14 w-auto"
-              priority
             />
           </Link>
 
