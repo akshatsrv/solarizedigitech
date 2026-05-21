@@ -1,126 +1,76 @@
-# Hostinger Deployment Guide for Solarize DigiTech
+# Hostinger Deployment Guide — Solarize DigiTech
 
-## Important: Hostinger Officially Supports Next.js!
+This site is built as **fully static HTML** (Next.js `output: 'export'`). There is **no Node.js process** to run on Hostinger — just upload files to `public_html`. This means:
 
-Hostinger has native support for Next.js applications (both frontend and backend features).
+- Works on every Hostinger plan, including the cheapest shared (Premium / Single).
+- Nothing to crash at runtime.
+- No application logs to babysit.
 
-## Changes Made for Hostinger Compatibility
+## 1. Build locally
 
-### 1. Next.js Configuration (`next.config.js`)
-- Added `output: 'standalone'` - Creates optimized production build
-- Added `unoptimized: true` for images - Required for shared hosting without dedicated image server
+```bash
+npm install
+npm run build
+```
 
-### 2. Node.js Version
-- Created `.nvmrc` and `.node-version` files specifying Node.js 18.17.0
-- Added `engines` field to `package.json` requiring Node >= 18.17.0
+This produces an `out/` directory containing the entire site (HTML, JS chunks, CSS, images, video).
 
-## Deployment Steps for Hostinger
+## 2. Upload `out/` to Hostinger
 
-### Option 1: Using Hostinger's GitHub Auto-Deploy (Recommended)
+In hPanel → **File Manager** (or via FTP/SSH):
 
-1. **Log into Hostinger Control Panel**
-2. **Navigate to Website → Application**
-3. **Select "Create Application"**
-4. **Choose Node.js Application**
-5. **Configure:**
-   - Application root: `/public_html` (or your preferred directory)
-   - Application URL: Your domain
-   - Application startup file: `server.js`
-   - Node.js version: **18.17 or higher**
-
-6. **Set Environment Variables:**
+1. Open `public_html/`.
+2. **Delete the contents** of `public_html/` (the placeholder `default.php` / `index.html` Hostinger ships with).
+3. Upload the **contents of `out/`** — not the folder itself — so the structure ends up as:
    ```
-   NODE_ENV=production
-   PORT=3000
+   public_html/index.html
+   public_html/about.html
+   public_html/_next/...
+   public_html/industries/...
+   public_html/solutions/...
+   public_html/logo.png
+   ...
    ```
 
-7. **Deploy via Git:**
-   - Connect your GitHub repository: `https://github.com/akshatsrv/solarizedigitech.git`
-   - Branch: `master`
+That's it. The site is live the moment files finish uploading.
 
-8. **Build Commands:**
-   ```bash
-   npm install
-   npm run build
-   ```
+> **Tip:** zip `out/` locally, upload one zip, extract on the server — far faster than uploading thousands of small files individually.
 
-9. **Start Command:**
-   ```bash
-   npm start
-   ```
+## 3. Point the domain at your hosting plan
 
-### Option 2: Manual Deployment
+As of the last check, `solarizedigitech.com` is on Hostinger's **parking** nameservers (`hermes.dns-parking.com` / `artemis.dns-parking.com`). That's why the URL shows a "Parked Domain" page and HTTPS fails — there is no website attached.
 
-1. **Build locally:**
-   ```bash
-   npm install
-   npm run build
-   ```
+In hPanel:
 
-2. **Upload to Hostinger via FTP:**
-   - Upload all files except `node_modules/`
-   - Upload the `.next/` folder
+1. Go to **Domains** → `solarizedigitech.com`.
+2. If the domain is not already attached to your hosting plan, click **Manage** → **Connect domain to hosting** (or in some hPanel layouts: **Websites** → **Add website**).
+3. Hostinger will automatically switch the nameservers from the parking set to its hosting nameservers (typically `ns1.dns-parking.com` / `ns2.dns-parking.com` — confusingly named the same, but a different DNS zone with real A records) and add an A record pointing to your hosting plan IP.
+4. Wait for propagation (usually 15 min – 2 hours, occasionally up to 24 h).
+5. In **SSL → Manage**, ensure a Let's Encrypt certificate is issued for both `solarizedigitech.com` and `www.solarizedigitech.com` (Hostinger usually auto-issues; if not, click **Install SSL**).
 
-3. **SSH into Hostinger and run:**
-   ```bash
-   cd /path/to/your/app
-   npm install --production
-   npm start
-   ```
+## 4. Verify
 
-### Option 3: Static Export (If Dynamic Features Not Needed)
+After DNS propagates:
 
-If you don't need server-side rendering, you can export to static HTML:
+- `https://solarizedigitech.com/` → loads the homepage.
+- `https://www.solarizedigitech.com/` → same. (Hostinger sets up the `www` redirect by default.)
+- Visit each route directly to confirm the 18 pages load:
+  - `/about`, `/contact`, `/insights`
+  - `/industries`, `/industries/corporate`, `/industries/healthcare`, `/industries/hospitality`, `/industries/manufacturing`, `/industries/retail`
+  - `/solutions`, `/solutions/ai-analytics`, `/solutions/cloud`, `/solutions/enterprise`, `/solutions/iot`
 
-1. **Update `next.config.js`:**
-   ```javascript
-   output: 'export'
-   ```
+## Updating the site later
 
-2. **Build:**
-   ```bash
-   npm run build
-   ```
+1. Edit code.
+2. `npm run build`.
+3. Re-upload `out/` contents to `public_html/` (overwrite).
 
-3. **Upload the `out/` directory to Hostinger's public_html**
+No restart, no application logs, no process to monitor.
 
-## Common Issues and Solutions
+## Known follow-ups
 
-### Issue 1: "Module not found" errors
-**Solution:** Ensure all dependencies are in `dependencies` not `devDependencies` in package.json
+- **Next.js 14.2.34 is end-of-life and has open advisories.** For a static export site these don't have a runtime attack surface (no SSR, no image optimizer, no middleware, no API routes running), but cleaning them up means upgrading to Next 16.x — a major-version jump that needs separate testing. Track this as a maintenance task, not a deployment blocker.
 
-### Issue 2: Port already in use
-**Solution:** Use Hostinger's assigned port or configure in your hosting settings
+## Why we abandoned the Node.js / standalone deployment
 
-### Issue 3: Images not loading
-**Solution:** The `unoptimized: true` setting handles this. Alternatively, use static paths in `/public`
-
-### Issue 4: Build fails
-**Solution:**
-- Check Node.js version (must be >= 18.17.0)
-- Run `npm install` before `npm run build`
-- Check build logs in Hostinger panel
-
-### Issue 5: App crashes on start
-**Solution:**
-- Check logs in Hostinger Application Manager
-- Verify `package.json` scripts are correct
-- Ensure all environment variables are set
-
-## Verify Deployment
-
-After deployment, test:
-1. Homepage loads correctly
-2. Navigation works
-3. All solution pages load
-4. Contact form works
-5. Images display properly
-6. Mobile responsiveness
-
-## Support
-
-If issues persist:
-1. Check Hostinger Application logs
-2. Verify Node.js version: `node --version`
-3. Test build locally: `npm run build && npm start`
-4. Contact Hostinger support with error logs
+Earlier the project used `output: 'standalone'` and a Node.js application on Hostinger. The site crashed 2–3 minutes after each build. Root cause: the site has zero server-side code (no API routes, no SSR, no `cookies()`/`headers()`, no `fetch`) — every page is prerendered HTML. Running it under Phusion Passenger was both fragile and unnecessary. Static export removes the entire failure mode.

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone', // For Hostinger deployment
+  output: 'export', // Static HTML export — upload `out/` to Hostinger public_html
   images: {
     remotePatterns: [
       {
